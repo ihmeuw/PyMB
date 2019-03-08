@@ -22,7 +22,7 @@ cache: packages
 install:
   - conda create -c conda-forge -n pymb_test -y python=3.6 numpy scipy libiconv libxml2 lxml scikit-sparse
   - source activate pymb_test
-  - which -a python && pip install rpy2 && python -c "import rpy2.rinterface as rinterface"
+  - which -a python && pip install rpy2==2.9.5 && python -c "import rpy2.rinterface as rinterface"
   - cd ../PyMB && python setup.py install
 
 jobs:
