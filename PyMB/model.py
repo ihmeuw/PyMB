@@ -26,8 +26,10 @@ __all__ = ['get_R_attr', 'check_R_TMB', 'model']
 
 def get_R_attr(obj, attr):
     '''
-    Convenience function to return a named attribute from an R object (ListVector)
-    e.g. get_R_attr(myModel.TMB.model, 'hessian') would return the equivalent of model$hessian
+    Convenience function to return a named attribute from an
+    R object (ListVector)
+    e.g. get_R_attr(myModel.TMB.model, 'hessian') would return
+    the equivalent of model$hessian
     '''
     return obj[obj.names.index(attr)]
 
@@ -42,7 +44,7 @@ def check_R_TMB():
         raise Exception("R installation not found")
 
     # Check for R headers
-    if (not 'R.h' in os.listdir(rin.R_HOME + "/include")):
+    if ('R.h' not in os.listdir(rin.R_HOME + "/include")):
         raise Exception("R.h not found")
 
     # Find TMB package
@@ -50,12 +52,14 @@ def check_R_TMB():
         raise Exception("TMB package doesn't exist in this R installation")
 
     # Find necessary TMB headers
-    if not 'TMB.hpp' in os.listdir(ro.r('paste0(find.package("TMB"), "/include")')[0]):
+    if 'TMB.hpp' not in os.listdir(ro.r('paste0(find.package("TMB"),' +
+                                        ' "/include")')[0]):
         raise Exception("TMB headers not found in include directory. " +
                         "Possible bad installation?")
 
     # Finally, check for the R SO/dynlib:
-    if (not 'libR.dylib' in os.listdir(rin.R_HOME + "/lib")) & (not 'libR.so' in os.listdir(rin.R_HOME + "/lib")):
+    if ('libR.dylib' not in os.listdir(rin.R_HOME + "/lib")) & \
+            ('libR.so' not in os.listdir(rin.R_HOME + "/lib")):
         raise Exception("R shared libraries not found")
 
     # If all checks pass, then print the paths and exit
@@ -73,15 +77,18 @@ class model:
     def __init__(self, name=None, filepath=None, codestr=None, **kwargs):
         '''
         Create a new TMB model, which utilizes an embedded R instance
-        Optionally compile and load model upon instantiation if passing in filepath or codestr
+        Optionally compile and load model upon instantiation
+        if passing in filepath or codestr
         Parameters
         ----------
         name : str, default "TMB_{random.randint(1e10,9e10)}"
             Used to create model objects in R
         filepath : str (optional)
-            Given a path to an existing .cpp file, the model will go ahead and compile it and load into R
+            Given a path to an existing .cpp file, the model will go ahead and
+            compile it and load into R
         codestr : str (optional)
-            A string containing .cpp code to be saved, compiled, and loaded into R
+            A string containing .cpp code to be saved, compiled, and
+            loaded into R
         **kwargs : optional
             Additional arguments passed to TMB_Model.compile()
         '''
@@ -135,7 +142,7 @@ class model:
         cc : str, default 'g++'
             C++ compiler to use
         R : str, default 'rin.R_HOME + "/include"'
-            location of R headers as picked up by rpy2 
+            location of R headers as picked up by rpy2
             Note: R must be built with shared libraries
                   See http://stackoverflow.com/a/13224980/1028347
         TMB : str, default 'ro.r('paste0(find.package("TMB"), "/include")')[0]'
@@ -175,7 +182,7 @@ class model:
                 output_dir=output_dir, name=self.name)
 
             # only rewrite cpp if identical code found
-            if os.path.isfile(self.filepath) == False or \
+            if not os.path.isfile(self.filepath) or \
                     open(self.filepath, 'r').read() != codestr:
                 print('Saving model to {}.'.format(self.filepath))
                 with open(self.filepath, 'w') as f:
@@ -237,11 +244,11 @@ class model:
         # if a module of the same name has already been loaded,
         # must unload R entirely it seems
         """
-        TODO: fix this so R doesn't have to be restarted, potentially 
+        TODO: fix this so R doesn't have to be restarted, potentially
         losing things the user has already loaded into R
         judging by https://github.com/kaskr/adcomp/issues/27 this should work:
-        self.R.r('try(dyn.unload("{output_dir}/{name}.so"), silent=TRUE)'.format(
-        output_dir=output_dir, name=self.name))
+        self.R.r('try(dyn.unload("{output_dir}/{name}.so"), silent=TRUE)'.
+        format(output_dir=output_dir, name=self.name))
         but it doesn't - gives odd vector errors when trying to optimize
         """
         if self.name in [str(get_R_attr(i, 'name')[0])
@@ -250,8 +257,9 @@ class model:
             warnings.warn(
                 'Restarting R and reloading model to prevent conflicts.')
             self.R.r('sink("/dev/null")')
-            self.R.r('try(dyn.unload("{output_dir}/{name}.so"), silent=TRUE)'.format(
-                output_dir=output_dir, name=self.name))
+            self.R.r('try(dyn.unload("{output_dir}/' +
+                     '{name}.so"), silent=TRUE)'.format(
+                         output_dir=output_dir, name=self.name))
             self.R.r('sink()')
             del self.R
             self.R = ro
@@ -261,7 +269,8 @@ class model:
         # load the model into R
         if load:
             self.load_model(
-                so_file='{output_dir}/{name}.so'.format(output_dir=output_dir, name=self.name))
+                so_file='{output_dir}/{name}.so'.format(
+                        output_dir=output_dir, name=self.name))
 
         # output time
         print('Compiled in {:.1f}s.\n'.format(time.time()-start))
@@ -270,7 +279,8 @@ class model:
         if so_file == '':
             so_file = 'tmb_tmp/{name}.so'.format(name=self.name)
         if not hasattr(self, 'filepath'):
-            # assume that the cpp file is in the same directory with the same name if it wasn't specified
+            # assume that the cpp file is in the same directory with
+            # the same name if it wasn't specified
             self.filepath = so_file.replace('.so', '.cpp')
         self.R.r('sink("/dev/null"); library(TMB)')
         self.R.r('dyn.load("{so_file}")'.format(so_file=so_file))
@@ -282,14 +292,17 @@ class model:
         missing = []
         with open(self.filepath) as f:
             for l in f:
-                if re.match('^PARAMETER' if thing == 'init' else '^{}'.format(thing.upper()), l.strip()):
+                if re.match('^PARAMETER' if thing == 'init' else '^{}'.format(
+                        thing.upper()), l.strip()):
                     i = re.search(r"\(([A-Za-z0-9_]+)\)", l.strip()).group(1)
                     if i not in getattr(self, thing).keys():
                         missing.append(i)
         if missing:
             missing.sort()
             raise Exception('''Missing the following {thing}: {missing}\n
-                Assign via e.g. myModel.{thing}["a"] = np.array(1., 2., 3.)'''.format(thing=thing, missing=missing))
+                Assign via e.g. myModel.{thing}["a"] = ''' +
+                            '''np.array(1., 2., 3.)'''.format(
+                                thing=thing, missing=missing))
 
     def build_objective_function(self, random=[], hessian=True, **kwargs):
         '''
@@ -297,7 +310,8 @@ class model:
         Parameters
         ----------
         random : list, default []
-            which parameters should be treated as random effects (and thus integrated out of the likelihood function)
+            which parameters should be treated as random effects
+            (and thus integrated out of the likelihood function)
             can also be added manually via e.g. myModel.random = ['a','b']
         hessian : boolean, default True
             whether to calculate Hessian at optimum
@@ -333,14 +347,16 @@ class model:
 
         # build the objective function
         self.TMB.model = self.TMB.MakeADFun(data=self.R.ListVector(self.data),
-                                            parameters=self.R.ListVector(self.init), hessian=hessian,
+                                            parameters=self.R.ListVector(
+                                                self.init), hessian=hessian,
                                             DLL=self.dll, **kwargs)
 
         # set obj_fun_built
         self.obj_fun_built = True
 
-    def optimize(self, opt_fun='nlminb', method='L-BFGS-B', draws=100, verbose=False,
-                 random=None, quiet=False, params=[], noparams=False, constrain=False, warning=True, **kwargs):
+    def optimize(self, opt_fun='nlminb', method='L-BFGS-B', draws=100,
+                 verbose=False, random=None, quiet=False, params=[],
+                 noparams=False, constrain=False, warning=True, **kwargs):
         '''
         Optimize the model and store results in TMB_Model.TMB.fit
         Parameters
@@ -355,19 +371,23 @@ class model:
             whether to print detailed optimization state
         random : list, default []
             passed to PyMB.build_objective_function
-            which parameters should be treated as random effects (and thus integrated out of the likelihood function)
+            which parameters should be treated as random effects
+            (and thus integrated out of the likelihood function)
             can also be added manually via e.g. myModel.random = ['a','b']
         params : list of strings, default []
-            which parameters to simulate, defaults to [] which means all parameters
+            which parameters to simulate, defaults to [] which
+            means all parameters
             list parameters by name to extract their posteriors from the model
         noparams : boolean, default False
             if True, will skip finding the means of the parameters entirely
         constrain : float or boolean, default False
-            if float, will constrain any draws of a parameter to be within that many
+            if float, will constrain any draws of a parameter to
+            be within that many
                 standard deviations of the median
         warning : bool
             print warning when there is non convergence with a model
-        **kwargs : additional arguments to be passed to the R optimization function
+        **kwargs : additional arguments to be passed to the
+        R optimization function
         '''
         # time function execution
         start = time.time()
@@ -396,12 +416,13 @@ class model:
         # fit the model
         if quiet:
             self.R.r('sink("/dev/null")')
-        self.TMB.fit = self.R.r[opt_fun](start=get_R_attr(self.TMB.model, 'par'),
-                                         objective=get_R_attr(
-                                             self.TMB.model, 'fn'),
-                                         gradient=get_R_attr(
-                                             self.TMB.model, 'gr'),
-                                         method=method, **kwargs)
+        self.TMB.fit = self.R.r[opt_fun](
+            start=get_R_attr(self.TMB.model, 'par'),
+            objective=get_R_attr(
+                self.TMB.model, 'fn'),
+            gradient=get_R_attr(
+                self.TMB.model, 'gr'),
+            method=method, **kwargs)
         if quiet:
             self.R.r('sink()')
         else:
@@ -413,7 +434,8 @@ class model:
             'convergence')][0]
         if warning and self.convergence != 0:
             print(
-                '\nThe model did not successfully converge, exited with the following warning message:')
+                '\nThe model did not successfully converge,' +
+                'exited with the following warning message:')
             print(self.TMB.fit[self.TMB.fit.names.index('message')][0] + '\n')
 
         # simulate parameters
@@ -425,30 +447,36 @@ class model:
 
     def report(self, name):
         '''
-        Retrieve a quantity that has been reported within the model using e.g. REPORT(Y_hat);
+        Retrieve a quantity that has been reported within
+        the model using e.g. REPORT(Y_hat);
         Parameters
         ----------
         name : str
             the name of the reported parameter/quantity to return
         '''
-        return np.array(get_R_attr(get_R_attr(self.TMB.model, 'report')(), name))
+        return np.array(get_R_attr(
+            get_R_attr(self.TMB.model, 'report')(), name))
 
-    def simulate_parameters(self, draws=100, params=[], quiet=False, constrain=False):
+    def simulate_parameters(self, draws=100,
+                            params=[], quiet=False, constrain=False):
         '''
-        Simulate draws from the posterior variance/covariance matrix of the fixed and random effects
+        Simulate draws from the posterior variance/covariance
+        matrix of the fixed and random effects
         Stores draws in Model.parameters dictionary
         Parameters
         ----------
         draws : int or boolean, default 1000
-            if Truthy, number of correlated draws to simulate from the posterior
+            if Truthy, number of correlated draws to
+            simulate from the posterior
         params : list of strings, default []
-            which parameters to simulate, defaults to [] which means all parameters
+            which parameters to simulate, defaults to []
+            which means all parameters
             list parameters by name to extract their posteriors from the model
         quiet : boolean, default False
             set to True in order to suppress outputting parameter summaries
         constrain : float or boolean, default False
-            if float, will constrain any draws of a parameter to be within that many
-                standard deviations of the median
+            if float, will constrain any draws of a
+            parameter to be within that many standard deviations of the median
         '''
         # time function
         start = time.time()
@@ -462,8 +490,11 @@ class model:
 
         # run sdreport to get everything in the right format
         if not self.random:
-            self.sdreport = self.TMB.sdreport(self.TMB.model, getJointPrecision=True,
-                                              hessian_fixed=get_R_attr(self.TMB.model, 'he')())
+            self.sdreport = self.TMB.sdreport(self.TMB.model,
+                                              getJointPrecision=True,
+                                              hessian_fixed
+                                              get_R_attr(
+                                                  self.TMB.model, 'he')())
         else:
             self.sdreport = self.TMB.sdreport(
                 self.TMB.model, getJointPrecision=True)
@@ -482,7 +513,8 @@ class model:
         # extract the joint precision matrix
         if not self.random:
             joint_prec_full = self.R.r(
-                'function(m) { return(1./m) }')(get_R_attr(self.sdreport, 'cov.fixed'))
+                'function(m) { return(1./m) }')(get_R_attr(self.sdreport,
+                                                           'cov.fixed'))
             joint_prec_names = get_R_attr(self.sdreport, 'par.fixed').names
             joint_prec_dense = extract_params(
                 joint_prec_full, joint_prec_names, params)
@@ -496,12 +528,14 @@ class model:
         # convert joint precision matrix to scipy.sparse.csc_matrix
         # (bypassing dense conversion step that happens if you use rpy2)
         def get_R_slot(obj, slot):
-            return np.array(self.R.r('function(obj) {{ return(obj@{}) }}'.format(slot))(obj))
+            return np.array(self.R.r('function(obj) ' +
+                                     '{{ return(obj@{}) }}'.format(slot))(obj))
         joint_prec = csc_matrix((get_R_slot(joint_prec_R, 'x'),
                                  get_R_slot(joint_prec_R, 'i'),
                                  get_R_slot(joint_prec_R, 'p')))
 
-        # make a list of all the parameters, ordered by position in the joint precision matrix
+        # make a list of all the parameters, ordered by position
+        # in the joint precision matrix
         if not self.random:
             ordered_params = joint_prec_names
         else:
@@ -542,7 +576,8 @@ class model:
             [self.R.NA_Real for i in range(len(ordered_params))])
         sds = self.R.FloatVector(
             [self.R.NA_Real for i in range(len(ordered_params))])
-        # loop through and add the parameters to the means/sds in the correct order
+        # loop through and add the parameters to the means/sds
+        # in the correct order
         for p in set(ordered_params):
             # index in joint precision matrix
             i_joint = [ii for ii, pp in enumerate(ordered_params) if pp == p]
@@ -552,28 +587,34 @@ class model:
             i_fixed = [ii for ii, pp in enumerate(fixed_names) if pp == p]
             # copy into the appropriate position
             if i_ran:
-                means[i_joint[0]:i_joint[-1]+1] = ran_mean[i_ran[0]:i_ran[-1]+1]
-                sds[i_joint[0]:i_joint[-1]+1] = ran_sd[i_ran[0]:i_ran[-1]+1]
+                means[i_joint[0]:i_joint[-1]+1] = \
+                    ran_mean[i_ran[0]:i_ran[-1]+1]
+                sds[i_joint[0]:i_joint[-1]+1] = \
+                    ran_sd[i_ran[0]:i_ran[-1]+1]
             elif i_fixed:
                 means[i_joint[0]:i_joint[-1] +
                       1] = fixed_mean[i_fixed[0]:i_fixed[-1]+1]
-                sds[i_joint[0]:i_joint[-1]+1] = fixed_sd[i_fixed[0]:i_fixed[-1]+1]
+                sds[i_joint[0]:i_joint[-1]+1] = \
+                    fixed_sd[i_fixed[0]:i_fixed[-1]+1]
 
         # generate draws
         # convert mean/sd to python
         means = np.array(means)
         sds = np.array(sds)
         # simulation function
-        # see http://en.wikipedia.org/wiki/Multivariate_normal_distribution#Drawing_values_from_the_distribution
+        # see http://en.wikipedia.org/wiki/Multivariate_normal_distribution \
+        # #Drawing_values_from_the_distribution
 
         def gen_draws(mu, prec, n):
 
             z = np.random.normal(size=(mu.shape[0], n))
             chol_jp = cholesky(prec)
-            # note: would typically use scikits.sparse.cholmod.cholesky.solve_Lt,
+            # note: would typically use
+            # scikits.sparse.cholmod.cholesky.solve_Lt,
             # but there seems to be a bug there:
             # https://github.com/njsmith/scikits-sparse/issues/9#issuecomment-76862652
-            return mu[:, np.newaxis] + chol_jp.apply_Pt(spsolve(chol_jp.L().T, z))
+            return mu[:, np.newaxis] + chol_jp.apply_Pt(
+                spsolve(chol_jp.L().T, z))
         # make draws
         if draws:
             param_draws = gen_draws(means, joint_prec, draws)
@@ -581,15 +622,18 @@ class model:
         # store results
         # constrain draws if requested
         if constrain and draws:
-            # find which draws are more than {constraint} standard deviations from the mean
+            # find which draws are more than {constraint} standard
+            # deviations from the mean
             wacky_draws = np.where(np.any([
                 np.greater(param_draws.T, means + (constrain * sds)),
                 np.less(param_draws.T, means - (constrain * sds))], axis=0).T)
             # replace those draws with the mean
             param_draws[wacky_draws] = means[wacky_draws[0]]
-        # add parameters' mean, sd, and optionally draws to the parameters dictionary
+        # add parameters' mean, sd, and optionally draws to the
+        # parameters dictionary
         for p in set(ordered_params):
-            # names will be the same for every item in a vector/matrix, so find all corresponding indices
+            # names will be the same for every item in a vector/matrix,
+            # so find all corresponding indices
             i = [ii for ii, pp in enumerate(ordered_params) if pp == p]
             if draws:
                 if type(self.init[p]) == np.ndarray:
@@ -623,7 +667,8 @@ class model:
 
     def draws(self, parameter):
         '''
-        Convenience function to return the draws for a specific parameter as a numpy.ndarray
+        Convenience function to return the draws for a
+        specific parameter as a numpy.ndarray
         '''
         return self.parameters[parameter]['draws']
 
@@ -636,16 +681,22 @@ class model:
             if 'draws' in v:
                 d = v['draws']
                 if d.shape[0] == 1:
-                    print('{p}:\n\tmean\t{m}\n\tsd\t{s}\n\tdraws\t{d}\n\tshape\t{z}'.format(
-                        p=p, m=v['mean'], s=v['sd'], d=d, z=d.shape))
+                    print('{p}:\n\tmean\t{m}\n\t' +
+                          'sd\t{s}\n\tdraws\t{d}\n\tshape\t{z}'.format(
+                              p=p, m=v['mean'], s=v['sd'], d=d, z=d.shape))
                 elif len(d.shape) == 2:
-                    print('{p}:\n\tmean\t{m}\n\tsd\t{s}\n\tdraws\t{d}\n\tshape\t{z}'.format(
-                        p=p, m=v['mean'], s=v['sd'], d='[{0},\n\t\t ...,\n\t\t {1}]'.format(
-                            d[0, :], d[d.shape[0]-1, :]), z=d.shape))
+                    print('{p}:\n\tmean\t{m}\n\t' +
+                          'sd\t{s}\n\tdraws\t{d}\n\tshape\t{z}'.format(
+                              p=p, m=v['mean'], s=v['sd'],
+                              d='[{0},\n\t\t ...,\n\t\t {1}]'.format(
+                                  d[0, :], d[d.shape[0]-1, :]), z=d.shape))
                 else:
-                    print('{p}:\n\tmean\t{m}\n\tsd\t{s}\n\tdraws\t{d}\n\tshape\t{z}'.format(
-                        p=p, m=v['mean'], s=v['sd'], d='[[{0},\n\t\t ...,\n\t\t {1}]]'.format(
-                            d[0, 0, :], d[d.shape[0]-1, d.shape[1]-1, :]), z=d.shape))
+                    print('{p}:\n\tmean\t{m}\n\tsd' +
+                          '\t{s}\n\tdraws\t{d}\n\tshape\t{z}'.format(
+                              p=p, m=v['mean'], s=v['sd'],
+                              d='[[{0},\n\t\t ...,\n\t\t {1}]]'.format(
+                                d[0, 0, :], d[d.shape[0]-1,
+                                              d.shape[1]-1, :]), z=d.shape))
             else:
                 print('{p}:\n\tmean\t{m}\n\tsd\t{s}\n\tdraws\tNone'.format(
                     p=p, m=v['mean'], s=v['sd']))
