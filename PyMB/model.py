@@ -492,8 +492,8 @@ class model:
         if not self.random:
             self.sdreport = self.TMB.sdreport(self.TMB.model,
                                               getJointPrecision=True,
-                                              hessian_fixed
-                                              get_R_attr(self.TMB.model, 'he'))
+                                              hessian_fixed=get_R_attr(
+                                                self.TMB.model, 'he')())
         else:
             self.sdreport = self.TMB.sdreport(
                 self.TMB.model, getJointPrecision=True)

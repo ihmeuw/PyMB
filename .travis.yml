@@ -29,7 +29,7 @@ jobs:
   include:
     - stage: Native TMB install from CRAN and building model using native g++ and subprocess; no RE
       script:
-        - bash bin/02_build_TMB_from_source.sh
+        - bash bin/01_install_TMB_from_CRAN.sh
         - python Examples/linreg_no_random.py --use_eigen_inc=0 --use_native_compiler=1
     - stage: Native TMB install from CRAN and building model using native g++ and subprocess; with RE
       script:
