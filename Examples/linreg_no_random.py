@@ -67,9 +67,9 @@ if __name__ == '__main__':
               use_R_compiler=use_nat_comp)
 
     # simulate data
-    N = 100
+    N = 1000
     m.data['x'] = np.arange(N)
-    m.data['Y'] = m.data['x'] + 0.5 + np.random.rand(N)
+    m.data['Y'] = 0.3*m.data['x'] + 0.5 + np.random.rand(N)
 
     # set initial parameter values
     m.init['alpha'] = 0.
@@ -80,6 +80,6 @@ if __name__ == '__main__':
     m.random = []
 
     # fit the model
-    m.optimize(draws=500)
+    m.optimize(draws=100)
     print(m.report('Y_hat'))
     m.print_parameters()

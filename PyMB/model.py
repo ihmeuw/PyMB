@@ -493,7 +493,7 @@ class model:
             self.sdreport = self.TMB.sdreport(self.TMB.model,
                                               getJointPrecision=True,
                                               hessian_fixed=get_R_attr(
-                                                self.TMB.model, 'he')())
+                                                  self.TMB.model, 'he')())
         else:
             self.sdreport = self.TMB.sdreport(
                 self.TMB.model, getJointPrecision=True)
@@ -680,19 +680,19 @@ class model:
             if 'draws' in v:
                 d = v['draws']
                 if d.shape[0] == 1:
-                    print('{p}:\n\tmean\t{m}\n\t' +
+                    print('{p}:\n\tmean\t{m}\n\t'.format(p=p, m=v['mean']) +
                           'sd\t{s}\n\tdraws\t{d}\n\tshape\t{z}'.format(
-                              p=p, m=v['mean'], s=v['sd'], d=d, z=d.shape))
+                              s=v['sd'], d=d, z=d.shape))
                 elif len(d.shape) == 2:
-                    print('{p}:\n\tmean\t{m}\n\t' +
+                    print('{p}:\n\tmean\t{m}\n\t'.format(p=p, m=v['mean']) +
                           'sd\t{s}\n\tdraws\t{d}\n\tshape\t{z}'.format(
-                              p=p, m=v['mean'], s=v['sd'],
+                              s=v['sd'],
                               d='[{0},\n\t\t ...,\n\t\t {1}]'.format(
                                   d[0, :], d[d.shape[0]-1, :]), z=d.shape))
                 else:
-                    print('{p}:\n\tmean\t{m}\n\tsd' +
+                    print('{p}:\n\tmean\t{m}\n\tsd'.format(p=p, m=v['mean']) +
                           '\t{s}\n\tdraws\t{d}\n\tshape\t{z}'.format(
-                              p=p, m=v['mean'], s=v['sd'],
+                              s=v['sd'],
                               d='[[{0},\n\t\t ...,\n\t\t {1}]]'.format(
                                 d[0, 0, :], d[d.shape[0]-1,
                                               d.shape[1]-1, :]), z=d.shape))
