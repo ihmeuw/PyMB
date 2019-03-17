@@ -77,7 +77,7 @@ if __name__ == '__main__':
     m.init['logSigma'] = 0.
 
     # set random parameters
-    m.random = ['alpha', 'Beta']
+    m.random = []
 
     # fit the model
     m.optimize(draws=500)

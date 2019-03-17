@@ -513,8 +513,8 @@ class model:
         # extract the joint precision matrix
         if not self.random:
             joint_prec_full = self.R.r(
-                'function(m) { return(1./m) }')(get_R_attr(self.sdreport,
-                                                           'cov.fixed'))
+                'function(m) { solve(m) }')(get_R_attr(self.sdreport,
+                                                       'cov.fixed'))
             joint_prec_names = get_R_attr(self.sdreport, 'par.fixed').names
             joint_prec_dense = extract_params(
                 joint_prec_full, joint_prec_names, params)

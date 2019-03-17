@@ -8,7 +8,7 @@ os:
 
 # Setup anaconda
 before_install:
-  - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - wget -q https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh -O miniconda.sh
   - chmod +x miniconda.sh
   - ./miniconda.sh -b -p /home/travis/miniconda3
   - export PATH=/home/travis/miniconda3/bin:$PATH
@@ -27,19 +27,23 @@ install:
 
 jobs:
   include:
-    - stage: Native TMB install from CRAN and building model using native g++ and subprocess
+    - stage: Native TMB install from CRAN and building model using native g++ and subprocess; no RE
+      script:
+        - bash bin/02_build_TMB_from_source.sh
+        - python Examples/linreg_no_random.py --use_eigen_inc=0 --use_native_compiler=1
+    - stage: Native TMB install from CRAN and building model using native g++ and subprocess; with RE
       script:
         - bash bin/01_install_TMB_from_CRAN.sh
         - python Examples/linreg.py --use_eigen_inc=1 --use_native_compiler=0
-    - stage: Native TMB install from CRAN and building model using R subprocess
+    - stage: Native TMB install from CRAN and building model using R subprocess; with RE
       script:
         - bash bin/01_install_TMB_from_CRAN.sh
         - python Examples/linreg.py --use_eigen_inc=1 --use_native_compiler=1
-    - stage: Source TMB build and building model using native g++ and subprocess
+    - stage: Source TMB build and building model using native g++ and subprocess; with RE
       script:
         - bash bin/02_build_TMB_from_source.sh
         - python Examples/linreg.py --use_eigen_inc=0 --use_native_compiler=0
-    - stage: Source TMB build and building model using R subprocess
+    - stage: Source TMB build and building model using R subprocess; with RE
       script:
         - bash bin/02_build_TMB_from_source.sh
         - python Examples/linreg.py --use_eigen_inc=0 --use_native_compiler=1
